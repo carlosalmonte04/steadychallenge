@@ -1,21 +1,21 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Dimensions } from 'react-native';
-import { Menu, Barista, Counter } from '../components';
+import { Menu, Queue, Counter } from '../components';
 
 const { width, height } = Dimensions.get('window');
 
 
 const menuItems = {
   'Cafe Au Lait': {
-    time: 4000,
+    time: 2000,
     name: 'Cafe Au Lait'
   },
   Cappuccino: {
-    time: 10000,
+    time: 3000,
     name: 'Cappuccino'
   },
   Expresso: {
-    time: 15000,
+    time: 1000,
     name: 'Expresso'
   }
 };
@@ -34,33 +34,48 @@ export class CoffeShop extends React.Component {
       itemsReady: [],
     };
 
-    this.onStartCounter();
+    this.startCounter();
   }
 
-  onStartCounter = () => {
+  startCounter = () => {
     this.interval = setInterval(
       () => {
       const { timeActive } = this.state;
       this.setState({ timeActive: timeActive + 1});
-      this.processTickets();
+      this.progress();
     }, 1000)
   }
 
-  onActiveItemReady = () => {
+  onBaristaTicketFinished = () => {
     const { tickets, itemsReady } = this.state;
     const [itemReady] = tickets;
+    itemReady.timeLeft = 3000;
     this.setState({
       tickets: tickets.slice(1),
-      itemsReady: [...itemsReady, itemReady],
+      itemsReady: [...itemsReady, { ...itemReady }],
     });
   }
 
-  processTickets = () => {
+  onCounterItemPickedUp = () => {
     const { tickets, itemsReady } = this.state;
-    const [activeItem] = tickets;
-    if (activeItem) {
-      if (activeItem.timeLeft === 0) this.onActiveItemReady();
-      else activeItem.timeLeft = activeItem.timeLeft - 1000
+    this.setState({
+      itemsReady: itemsReady.slice(1),
+    });
+  }
+
+  progress = () => {
+    const { tickets, itemsReady } = this.state;
+    const [activeBaristaTicket] = tickets;
+    const [activeCounterItem] = itemsReady;
+
+    if (tickets[0]) {
+      if (tickets[0].timeLeft === 0) this.onBaristaTicketFinished();
+      else tickets[0].timeLeft = tickets[0].timeLeft - 1000
+    }
+
+    if (itemsReady[0]) {
+      if (itemsReady[0].timeLeft === 0) this.onCounterItemPickedUp();
+      else itemsReady[0].timeLeft = itemsReady[0].timeLeft - 1000
     }
   }
 
@@ -85,16 +100,19 @@ export class CoffeShop extends React.Component {
     const { tickets, itemsReady } = this.state;
     return (
       <View style={styles.container}>
-        <View style={styles.shopActions}>
-          <TouchableOpacity style={styles.open} onPress={this.onStartCounter}>
-            <Text>Open</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.close} onPress={this.onStopCounter}>
-            <Text>Stop</Text>
-          </TouchableOpacity>
+        <Text style={styles.title}>Coffee Shop</Text>
+        <View style={styles.insideShop}>
+          <Queue
+            name='Barista'
+            emptyState={'Please add an item to the menu'}
+            queue={tickets}
+          />
+          <Queue
+            name='Counter'
+            emptyState={'Items ready for pickup will show here'}
+            queue={itemsReady}
+          />
         </View>
-        <Barista activeItem={tickets[0]} />
-        <Counter itemsReady={itemsReady} tickets={tickets} />
         <Menu menuItemsArr={menuItemsArr} onMenuItemPress={this.onMenuItemPress} />
       </View>
     )
@@ -105,7 +123,23 @@ export class CoffeShop extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 24,
+    backgroundColor: '#E7E5F3',
+    height,
     width,
+    justifyContent: 'space-around'
+  },
+  title: {
+    fontWeight: 'bold',
+    color: '#131416',
+    letterSpacing: 0.8,
+    marginTop: 24,
+    fontSize: 32,
+    alignSelf: 'center'
+  },
+  insideShop: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-around'
   },
   shopActions: {
