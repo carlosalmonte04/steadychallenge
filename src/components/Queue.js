@@ -1,58 +1,56 @@
 import React from 'react';
-import { ScrollView, View, Text, StyleSheet, Dimensions } from 'react-native';
+import { FlatList, View, Text, StyleSheet, Dimensions } from 'react-native';
 import { MenuItem } from './MenuItem';
 
 const { width, height } = Dimensions.get('window');
 
-export const Queue = ({ name, queue = [], emptyState }) => (
-  <View style={styles.container}>
-    <Text style={styles.title}>{name}</Text>
-    {!queue.length && (
-      <Text
-        style={[styles.message, styles.emptyState]}
-      >
-        {emptyState}
+export const Queue = ({ name, queue = [], emptyState, accessoryMessage }) => {
+  const renderActive = () => (
+    <View style={styles.activeMessage}>
+      <Text style={styles.message}>
+        {accessoryMessage} 
       </Text>
-    )}
-    <View style={styles.activeContainer}>
-      {!!queue.length && (
-        <View style={styles.activeMessage}>
-          <Text style={styles.message}>
-            Next up: 
-          </Text>
-              <MenuItem
-              id={queue.reverse()[0].name}
-              name={queue.reverse()[0].name}
-              onPress={() => {}}
-            />
-            <Text style={styles.message}>
-            Ready in: {queue[0].timeLeft / 1000}
-          </Text>
-        </View>
-      )}
-      </View>
-    <ScrollView
-      style={styles.box}
-      contentContainerStyle={styles.box}
-      stickyHeaderIndices={[0]}
-    >
-      {queue.length > 1 && <Text style={styles.message}>Coming up: </Text>}
-      {queue.length > 1 && (
-          queue.slice(1).map(
-            (menuItem, index) => (
-              <MenuItem
-                key={menuItem.name + index}
-                id={menuItem.name}
-                name={menuItem.name}
-                onPress={() => {}}
-              />
-            )
-          )
+          <MenuItem
+          id={queue.reverse()[0].name}
+          name={queue.reverse()[0].name}
+          onPress={() => {}}
+        />
+        <Text style={styles.message}>
+        Ready in: {queue[0].timeLeft / 1000}
+      </Text>
+    </View>
+  );
 
-      )}
-    </ScrollView>
-  </View>
-);
+  const renderEmpty = () => <Text style={styles.message}>{emptyState}</Text>
+
+  const renderItem = ({ item, index }) => (
+    <MenuItem
+      key={item.name + index}
+      id={item.name}
+      name={item.name}
+      onPress={() => {}}
+    />
+  );
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>{name}</Text>
+        {!queue.length && renderEmpty()}
+      <View style={styles.activeContainer}>
+        {!!queue.length && renderActive()}
+      </View>
+      <FlatList
+        showsVerticalScrollIndicator ={false}
+        showsHorizontalScrollIndicator={false}
+        ListHeaderComponent={(queue.length && <Text>Coming up</Text>)}
+        data={queue.slice(1)}
+        renderItem={renderItem}
+        style={styles.box}
+        keyExtractor={(item, index) => item.name + index}
+      />
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -77,9 +75,6 @@ const styles = StyleSheet.create({
   },
   message: {
     marginTop: 12
-  },
-  emptyState: {
-
   },
   box: {
     padding: 12,

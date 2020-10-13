@@ -33,8 +33,11 @@ export class CoffeShop extends React.Component {
       timeActive: 0,
       itemsReady: [],
     };
-
     this.startCounter();
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
   }
 
   startCounter = () => {
@@ -59,14 +62,12 @@ export class CoffeShop extends React.Component {
   onCounterItemPickedUp = () => {
     const { tickets, itemsReady } = this.state;
     this.setState({
-      itemsReady: itemsReady.slice(1),
+      itemsReady: [ ...itemsReady.slice(1) ],
     });
   }
 
   progress = () => {
     const { tickets, itemsReady } = this.state;
-    const [activeBaristaTicket] = tickets;
-    const [activeCounterItem] = itemsReady;
 
     if (tickets[0]) {
       if (tickets[0].timeLeft === 0) this.onBaristaTicketFinished();
@@ -77,11 +78,6 @@ export class CoffeShop extends React.Component {
       if (itemsReady[0].timeLeft === 0) this.onCounterItemPickedUp();
       else itemsReady[0].timeLeft = itemsReady[0].timeLeft - 1000
     }
-  }
-
-  onStopCounter = () => {
-    const { timeActive } = this.state;
-    clearInterval(this.interval);
   }
 
   onMenuItemPress = (itemId) => {
@@ -104,16 +100,21 @@ export class CoffeShop extends React.Component {
         <View style={styles.insideShop}>
           <Queue
             name='Barista'
+            accessoryMessage='Next up:'
             emptyState={'Please add an item to the menu'}
             queue={tickets}
           />
           <Queue
             name='Counter'
+            accessoryMessage='For pickup'
             emptyState={'Items ready for pickup will show here'}
             queue={itemsReady}
           />
         </View>
-        <Menu menuItemsArr={menuItemsArr} onMenuItemPress={this.onMenuItemPress} />
+        <Menu
+          menuItemsArr={menuItemsArr}
+          onMenuItemPress={this.onMenuItemPress}
+        />
       </View>
     )
   }

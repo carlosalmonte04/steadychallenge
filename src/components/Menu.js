@@ -20,9 +20,9 @@ export const Menu = ({ menuItemsArr, onMenuItemPress }) => {
 
 const styles = StyleSheet.create({
   container: {
-    width: width * 0.8,
-    alignSelf: 'center',
+    width: width * 0.9,
     height: '30%',
+    paddingHorizontal: 12
   },
   items: {
     flexDirection: 'row',
